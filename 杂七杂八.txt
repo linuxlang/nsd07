@@ -1,0 +1,770 @@
+linuxshell 脚本攻略读书笔记
+normal array:
+    echo -n 'test': 忽略行尾的换行符
+    echo -e '1\t2\t3\t': 引号内的转义字符有效，不加 -e 则直接原样打印出引号内的内容。
+
+echo array=(0 1 2 3 4 5 6 7 8 9)    # 定义一个数组
+echo ${array[2]}                    # 打印数组第三个元素
+index=5;echo ${array[index]}        #
+echo ${#array[*]}                   # 打印数组元素的个数
+echo ${array[*]}                    # 打印数组内的所有元素
+
+关联数组:
+    可以使用任意文本作为文件索引。
+        定义关联数组: declare -A fruit_array
+                      fruit_array=([apple]="10 RMB" [orange]="20 RMB")
+echo "the apple cost is ${fruit_array[apple]}"
+        列出关联数组的索引号: echo ${!fruit_array[*]} 或者 echo ${!fruit_array[@]}
+
+read:获取用户输入
+    read test; ... ; echo $test
+
+tput:终端处理工具
+    tput cols;tput lines : 显示行数和列数
+    tput longname : 显示终端名
+    tput cup 100 100 : 移动光标到(100,100)位置
+    tput setb no : 设置终端背景色
+
+###############################################
+#!/bin/bash
+#filename: test_tput_sleep.sh
+echo -n count: # -e 参数 删除 count 后的换行符
+tput sc        # 存储光标位置
+
+count=0;       
+while true;
+do
+    if [ $count -lt 40 ]; # -lt : less than 小于
+    then let count++;     # let 数学运算
+        sleep 1;          # 
+        tput rc;          # 恢复光标位置
+        tput ed;          # 清楚当前光标位置到行尾之间的内容 
+        echo -n $count;
+    else exit 0;
+    fi
+done
+###############################################
+
+fork炸弹: :(){:|:&};:
+
+cat -n: 添加行号
+echo %?    #获取函数或命令的返回值
+
+read    #接收用户输入
+        read -n 5 var;echo $var    # read -n numbers_char variable_name    按nubers_char判断是否结束输入
+        read -s var;echo $var      #不显示输入的字符
+        read -p "Enter Name:" name #显示提示信息
+        read -t timeout var    #限时输入，在timeout时间内有效
+        read -d delim_charvar   # 自定义定界符以作为输入结束符
+
+IFS 定界符，默认定界符位换行、制表、空格（可用于分割字符串）
+        #####################################################################
+                data='name,number,sex,location'
+                oldIFS=$IFS
+                IFS=,
+                for item in $data;
+                do
+                echo item: $item
+                done
+
+                IFS=$oldIFS
+
+        #####################################################################
+
+          #function.sh fun_IFS()函数
+
+echo {1..50}     #生成数字列表
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50
+echo {a..z}      #生成字母列表
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+
+for 循环
+######################################################
+         for var in list; 
+         do 
+         commands;
+         done
+                                       # list can be a string or sequence.
+
+        ####### THE Second method ####### 
+         for((i=0;i<10;i++))
+         {
+             commands;
+         }
+######################################################
+
+while 循环
+######################################################
+        while condition
+        do
+        commands;
+        done
+######################################################
+
+until 循环
+######################################################
+         x=0;
+         until [ $x -eq 9 ];   #[ $x -eq 9 ] is condition
+         do
+         let x++;
+         echo $x;
+         done
+######################################################
+
+比较与测试
+######################################################
+   if/if else
+         if condition;
+         then
+         commands;
+         fi
+
+   else if/else
+         if condition; 
+         then 
+         commands;
+         elif condition;
+         then
+             conmands;
+         else
+             conmands;
+         fi
+
+######################################################
+
+使用逻辑运算符进行判断
+######################################################
+      &&: 逻辑与; ||: 逻辑或
+             [ condition ] && action;    #如果condition为真，则执行action
+             [ condition ] || action;    #如果condition为假，则执行action
+######################################################
+
+算术比较
+######################################################
+        -gt: 大于
+        -lt: 小于
+        -ge: 大于等于
+        -le: 小于等于
+        -ne: 不等于
+
+         [ $var -eq 0 -a $var2 -gt 2 ] # -a 逻辑与
+         [ $var -ne 0 -o $var2 -gt 2 ] # -o 逻辑或
+######################################################
+
+文件判断标志
+######################################################
+    [ -f $file_var ] #若给定的变量包含正常的文件路径或文件名，则为真
+    [ -x $var ]      #若给定的变量包含的文件可执行，则为真
+    [ -d $var ]      #若给定的变量是目录，则为真
+    [ -e $var ]      #若给定的变量包含的文件存在，则为真
+    [ -c $var ]      #若给定的变量是一个字符设备文件的路径，则为真
+    [ -b $var ]      #若给定的变量是一个块符设备文件的路径，则为真
+    [ -w $var ]      #若给定的变量包含的文件可写，则为真
+    [ -r $var ]      #若给定的变量包含的文件可读，则为真
+    [ -L $var ]      #若给定的变量包含的是一个符号链接，则为真
+
+                fpath='/etc/passwd'
+                if [ -e $fpath ]; then
+                echo 'file exists';
+                else
+                echo 'file not exists';
+                fi 
+######################################################
+
+字符串比较
+######################################################
+    注意：使用双中括号
+            [[ $str1 == $str2 ]] # str1 str2 相等时为真
+            [[ $str1 != $str2 ]] # str1 str2 不等时为真
+            [[ $str1 > $str2 ]]  # str1 大于 str2 时为真
+            [[ $str1 < $str2 ]]  # str1 小于 str2 时为真
+            [[ -z $str1 ]]       # 若 str1 为空字符串串，则为真
+            [[ -n $str1 ]]       # 若 str1 为非空字符串，则为真
+######################################################
+
+test 用于条件检测：
+        if [ $var -eq 0 ]; then echo 'TRUE'; fi
+        if test $var -eq 0 ; then echo 'TRUE'; fi 
+        #两者等同
+
+cat 可以指定分隔符，默认为 \t  -s file # 将多个空行压缩成单个
+cat -T file # 将制符表打印出来
+cat -n file # 打印行号
+cat learnShell.note | tr -s '\n' # 移除空白行后打印出来
+
+录制与回放终端会话: script/scriptreplay
+        script -t 2> timing.log -a output.session
+        >typre commands;
+        >....
+        >....
+        >exit
+
+        scriptreplay timing.log output.session
+
+find 命令：
+    -name: 按文件名查找; -inane: 不区分大小写
+    find ~ -name '*.txt'  # 查找 ~ 目录下的所有 txt 文件
+    find ~ -iname '*.txt' # iname 查找时不区分大小写
+    find ~ \( -name '*.txt' -o -name '*.pdf' \) # 查找 ~ 目录下的 txt 和 pdf 文件 
+
+    -path: 可以对路径进行匹配
+    find ~ -path '*vim*' # 查找 ~ 目录下所有含 vim 的路径 
+
+    -regex: 基于正则表达式对文件路径进行匹配; -iregex: 不区分大小写
+    find ~ -regex ".*\(\.py\|\.sh\)$" # 查找 ~ 目录下所有的 py 和 sh 文件
+
+    !: 含否定的参数
+    find ~ ! -name '*.txt' # 查找 ~ 下所有不是以 txt 结尾的文件
+
+    -maxdepth/-mindepth: # 按目录深度查找
+
+    -type: # 按文件类型查找
+        f   普通文件
+        l   链接文件
+        d   目录
+        c   字符设备
+        b   块设备
+        s   套接字
+        p   Fifo
+
+    -atime: 用户最近一次访问文件的时间
+    -mtime: 文件内容最后一次被修改的时间
+    -ctime: 文件元数据(权限或者所有权)最后一次改动的时间
+        -atime/-mtime/-ctime 单位都是天; -amin/mmin/cmin 单位都是分钟
+    -/+： - 表示小于; + 表示大于
+    eg: find ~ -type f -atime -7 # 查找 ~ 目录下最近7天访问的文件
+
+    -size: 按文件大小查找
+    find ~ -type f -size +2k   # b: 块(512字节); c: 字节; w: 字; k: 千字节; M: 兆; G
+
+    -delete: 删除匹配的文件
+    find ~ -type f -name "*.swp" -delete
+
+    -perm: 按文件权限查找
+    find ~ -type f -perm 644 # 查找 ~ 目录下权限为644的普通文件
+
+    -user: 按用户名查找
+    find ~ -type f -user sdgl 
+
+    -exec: 可执行相关命令
+    find ~ -type f -user root -exec chown sdgl {} \; # {}会替换成相应的文件名，查找 ~ 目录下所有者为 root 的文件，并更改其所有权限为 sdgl
+    find ~ -type f -name '*.c' -exec cat {} \;>all_c_files.txt
+    find ~ -type f -mtime +10 -exec cp {} OLD \;
+
+----------------------------------------2017/08/22---------------------------------------------------    
+xargs 命令:
+   从 stdin 接收数据并重新格式化，将其作为其他命令的参数（将输入中的多行数据转化为单行）
+        $: cat example.txt
+            1 2 3 4 5 6 
+            7 8 9 
+            10 11 12
+        $: cat example.txt | xargs
+            1 2 3 4 5 6 7 8 9
+    xargs -n number_chars: 将数据打印成每行 number_chars 个数据
+        $: cat example.txt | xargs -n 3
+            1 2 3
+            4 5 6
+            7 8 9
+            10 11 12
+    xargs -d char: 指定 char 为字符串的分割符，默认分隔符为 IFS,类似给 IFS 赋值
+        $: echo '123x456x789' | xargs -d x
+            123 456 789
+        $: echo '123x456x789' | xargs -d x -n 2
+            123 456
+            789
+    xargs: 为其他命令传输参数 
+        $: cat args.txt | xargs -n 1 commands # 每次输入一个参数
+            commands -p arg -1 # 命令参数 -p -1 固定， arg 可变
+        $: cat args.txt | xargs -I {} commands -p {} -1   #  用 -I 参数，使用 {} 进行字符串替换
+        $: cat args.txt | ( while read arg; do cat $arg; done )   ==  cat args.txt | xargs -I {} cat {}
+    xargs -0: 以 \0 为定界符
+        $: find ~ -type f -name '*.log' -print0 | xargs -0 rm -f
+        $: find ~ -type f -name '*.php' -print0 | xargs -0 wc     # 打印所有 php 文件中代码的行数 
+
+tr 命令:
+    从 stdin 接收数据，进行替换、删除、以及压缩
+        tr [options] set1 set2
+        $: echo 'HELLO WORLD' | tr 'A-Z' 'a-z'  # 大小写替换
+    tr 对数字加密和解密:
+        $: echo 123456 | tr '0-9' '9876543210'     # '9876543210' 不可写成 9-0
+        $: echo 'hello world, good morning' | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+        $: cat test | tr '\t' ' '  # 替换制符表为空格
+    tr -d set 删除集合中含 set 集合相同的字符
+        $: echo 'hello 123 world 456' | tr -d '0-9'
+    tr -c set 定义一个补集
+        $: echo 'hello 1 2 3 world, so what? ' | tr -d -c '0-9 \n'
+                1 2 3
+    tr -s char 压缩字符
+        $: echo 'hello      world    1 2 3' | tr-s ' '
+                hello world 1 2 3
+
+校验和: md5sum 和 sha1sum
+    生成校验和:
+        md5sum filename >> filename_sum.md5
+        sha1sum filename >> filename_sum.sha1
+    验证校验和:
+        md5sum -c filename_sum.md5
+        sha1sum -c filename_sum.sha1
+
+sort 命令:
+        $: sort file1 file2 file3 .... >> sort_file.txt  # 对多个文件排序
+        $: sort file1 file2 file3 .... -o sort_file.txt  # 对多个文件排序
+        $: cat sort_file.txt | uniq > uniq_file.txt # 找出排序文件中不重复的行
+        $: sort -n filename # 按数字进行排序
+        $: sort -r filename # 按逆序排序
+        $: sort -M months.txt # 按月份排序
+        $: sort -k 1 data.txt # 按列排序        
+            1 bad 1000
+            2 linux 1000
+            3 mac 1000
+            4 winxp 2000
+        $: sort -nk 1.1,1.1 data.txt # 按第1列第1个数字排序
+            1568ddddd
+            6548wfdsfa
+            8456dfasd
+
+var=$RANDOM # 取随机数
+var=$$      # 取当前进程ID
+
+取文件名陈或者扩展名:
+    filename='file.jpg'
+    name=${filename%.*} #取文件名称
+    echo $name 
+    extion=${filename#*.} # 取文件扩展名
+    echo $extion
+
+    string=www.baidu.com
+    echo ${string%.*}      # www.baidu 
+    echo ${string%%.*}     # www 
+    echo ${string#*.}      # baidu.com
+    echo ${string##*.}     # com 
+
+----------------------------------------2017/08/23---------------------------------------------------    
+printf 命令:类比于 c 语言
+    printf "%d %d %d\n" 1 2 3
+
+comm 命令:
+    用于两个文件间的比较，可打印出两个文件的交集、差集，但用于比较的文件必须是排序过的文件
+    cat A.txt
+        apple
+        gold
+        iron
+        orange
+        silver
+        steel
+    cat B.txt
+        carrot
+        cookies
+        gold
+        orange
+    comm A.txt B.txt
+        apple 
+                carrot
+                cookies 
+                        gold 
+        iron
+                        orange 
+        silver 
+        steel 
+        A-B     B-A     A交B 
+    -1 -2 -3 删除对应的列
+    comm A.txt B.txt -1 -2 # 只打印交集
+    comm A.txt B.txt -3    # 只打印不同行
+
+3.4 查找并删除重复文件(p91)   ×××
+
+mkdir -p /home/sdgl/test/test # 创建目录，会忽略存在的目录，同时创建缺失的目录
+
+权限：用户、用户组、其他 (user group others)
+$: ll
+        -rw-r--r--  1 sdgl sdgl  3825 8月  18 13:30 .bashrc
+        drwx------ 19 sdgl sdgl  4096 8月  21 15:08 .cache/
+    第一列第一个字符：
+        -   普通文件
+        d   目录
+        c   字符设备
+        b   块设备
+        l   符号链接
+        s   套接字
+        p   管道
+    剩余9个字符，每三个一组，分别为 user group others 的读、写、执行权限
+
+    -rwS------ : 用户执行权限还有一个 setuid(S)的特殊权限，允许用户以其拥有者的权限执行可执行文件
+    ----rwS--- : 组权限没有 setuid,但有 setgid,它允许同该目录拥有者所在组权限来执行可执行文件，但是这个组和实际发起命令的组可能未必相同
+    -------rwt /temp : 目录有一个特殊权限,称为粘滞位，它只允许创建该目录的用户删除其目录下的文件或目录
+                        只在最后一个字符出现， t: 表示没有设置执行权限; T: 表示具有执行权限
+
+chmod 设置文件权限:
+    chmod u=rwx g=rw o=r filename
+    chmod a+x filename              # 给所有用户添加执行权限
+    chmod a+t dir_name              # 设置粘滞位
+    chmod 777 . -R                  # 递归设置权限
+    chmod +s filename               # 添加 setuid 的特殊权限
+chown 更改所有权:
+    chown user.group filename       # 更改文件的所有者
+    chown user.group . -R           # 递归设置所有权
+
+chattr 命令: 设置文件不可修改
+    chattr +i filename # 添加不可修改属性
+    chattr -i filename # 移除不可修改属性
+
+----------------------------------------2017/08/24---------------------------------------------------    
+IO 重定向:
+    0-9: 系统经常使用文件描述符符号，默认 0 1 2 是开启的,类似于文件句柄， 0 标准输入; 1 标准输出; 2 错误输出
+    ls /proc/self/fd 查看已开启的描述符 
+         > filename:  重定向输出给 $filename 文件，当文件不存在时创建文件，当文件存在时，先清空文件 (默认的使用都是标准输出， 即 1》) 
+         >> filename: 重定向输出给 $filename 文件， ... ，当文件存在时会追加到文件末尾              (1>> , 当使用 2> / 2>> ,使用的是错误输出)
+         &> / &>>: 表示将标准输出和错误输出都重定向到同一文件
+
+        grep 'hello' <filename: 重定向输入，将文件中的内容作为输入
+        exec number>&- / exec number<&-: 关闭文件描述符
+
+进程替换:
+    >(commands) / <(commands)       # < 和 ( 之间没有空格
+        comm <(ls -l) <(ls -al)     # 列出两个命令的不同 (ls -l 结果可能委派需)
+        diff <($first_dir) <($second_dir) # 比较两个目录里的文件是否相同
+        cat <(ls -l) == ls -l | cat
+
+        ##########################################################################################################
+            #!/bin/bash
+            # Filename      print_file_info.sh      
+            # Date:         2017/08/24
+            # Fuction:      打印指定目录下文件的统计信息
+            # Author:       sdgl
+            if [ $# -ne 1 ]; # 判断是否传有参数 
+            then
+            echo $0 basepath;
+            echo
+            fi
+            path=$1 # 获取第一个参数
+            declare -A statarry;         # 定义关联数组
+            while read line;
+            do
+            ftype=`file -b $line`; # 需用 ` 符号，不是单引号`
+            let statarry[$ftype]++; # $ftype 需加引号
+            #    echo $ftype ${statarry[$ftype]};
+            # < <(commands) 这里第一个 < 代表输入重定向，第二个 <(commands) 表示进程替换，其功能是把一个命令的结果发送给另一个命令，类似于管道
+            done< <(find $path -type f -print) # 两个小于号之间应有空格
+            #echo $IFS
+            #echo ${!statarry[*]} ${statarry[*]}
+            # 将分界符换成 0，因为原分界符为空格，而索引内含有空格，导致无法正确取出索引
+            oldIFS=$IFS
+            IFS=\0
+            echo ================== file types and counts ========================
+            for ftype in ${!statarry[*]};
+            do
+            echo $ftype : ${statarry[$ftype]}
+            done
+            IFS=$oldIFS   # 程序结束后需恢复 IFS
+        ##########################################################################################################
+
+比较文件差异和恢复文件: (patch 命令)
+    diff -u A.txt B.txt > C.patch # -u 参数，格式化输出差异文件
+        A.txt
+            apple 
+            gold 
+            iron
+            orange 
+            silver 
+            steel 
+            This is A.txt
+        B.txt
+            carrot
+            cookies 
+            gold 
+            orange 
+            This is B.txt
+        C.patch
+            --- A.txt   2017-08-24 16:44:20.829937693 +0800
+            +++ B.txt   2017-08-24 16:44:33.506581545 +0800
+            @@ -1,7 +1,5 @@
+            -apple 
+            +carrot
+            +cookies 
+            gold 
+            -iron
+            orange 
+            -silver 
+            -steel 
+            -This is A.txt
+            +This is B.txt
+        patch -p1 A.txt < C.patch # 将恢复成 B.txt
+        patch -p1 B.txt < C.patch # 将恢复成 A.txt
+
+    diff -Naur dir_1 dir_2          # diff 可以对目录中的内容生成差异输出
+        -N: 将缺失文件看作控文件
+        -a: 将所有文件都看作文本文件
+        -u: 同上
+        -r: 递归，遍历目录下的所有文件
+
+----------------------------------------2017/08/28---------------------------------------------------    
+head and tail commands:
+    head $filename: print the first 10 lines
+    tail $filename: print the last 10 lines
+
+    head -n $number $filename: ptint the first $number lines
+    tail -n $number $filename: print the last $number lines
+
+    head -n -N $filename: print lines except the last N lines
+    tail -n +(N+1) $filename: print lines except the first N lines
+
+    tail -f filename: -f 选项密切关注文件中新增加的内容，并随数据的增加时时保持更新
+    PID=$(pidof gedit); tail -f filename --pid $PID: tail 会随着进程的结束而结束，并时时更新着进程写入的数据
+    tail -f filename -s times: -s 加入时间间隔，作为监视文件更新的时间间隔
+
+print directory methods:
+    ls -d */
+    ls -F | grep "/$"
+    ls -l | grep "^d"
+    find . -type d -maxdepth 1 -print
+
+pushd and popd commands: 进行路径切换
+    dirs: 可以查看当前栈内容
+    pushd $dir: 将目录 $dir 压入栈,并切换到目录 $dir
+    dirs;pushd +N: N 是要切换的目录在栈中下标(0...)
+    dirs;popd  +N: 删除栈中的下标为 N 的目录(0...)
+
+    cd -: 可以迅速在两个目录之间切换
+
+wc commands: 统行数、单词数和字符数
+    wc -l $filename: lines
+    wc -w $filename: word
+    wc -c $filename: char
+    wc $filename -L: 打印文件中最长行的长度
+    wc $filename: print l w c $filename 
+
+tree commands: 以树形方式打印文件目录
+    tree -h: 附加打印文件的大小
+    tree $PATH -H http://localhost -o out.html: 以 html 的方式存储文件目录列表
+
+seq commands: 用于产生从某一个数到另一个数之间的所有整数
+    seq [para] MAX: 打印从 0-MAX 的所有整数
+    seq [para] MIN MAX: 打印从 MIN-MAX 之间的所有整数
+    seq [para] MIN increment MAX: seq 0 2 10: 0 2 4 6 8 10 从 MIN 开始以间隔 increment 为增量打印所有小于等于 MAX 的整数
+
+    -f (--format): 使用 printf 相同的格式输出
+    -s: 指定字符串之间的分隔符
+    -w: 指定宽度，使得宽度相同哦你，不足添加 0
+
+    $:seq -f"%3g" 9 13    # 009 010 011 012 013  (以 \n 分割)
+    $:seq -f"str%03g" 9 13 # str009 str010 str011 str012 str013 (...)
+    $:seq -w 99 102 # 099 100 101 102 (...)
+    $:seq -s" " -f"str%03g" 9 13 # (549...) 指定分割符为空格
+    $:seq -s"`echo -e '\t'`" 9 11 # 以 \t 为分隔符
+
+正则表达式:
+    ^       行起始标记
+    $       行尾标记
+    .       任意字符
+    []      []内的任意一个字符
+    [^]     除 [^] 之外的任意一个字符
+    [-]     指定范围内的任意一个字符
+    ?       匹配之前的项 1 次或 0次
+    +       匹配之前的项 1 次或多次
+    *       匹配之前的项 0 次或多次
+    ()      创建一个用于匹配的字串      # max(tri)? 匹配 max 或者 maxtri
+    {n}     匹配之前的项 n 次
+    {n,}    匹配之前的项至少 n 次
+    {n,m}   匹配之前的项至少 n 次，至多 m 次
+    |       匹配 | 两边的任意一项
+    \       转意字符
+
+grep commands:
+    grep $match_pattern $filename        # 打印文件中包含 $match_pattern 的行
+    grep -E "[0-9]+" $filename           # -E 可以使用正则表达式作为 match_pattern 或者使用 egrep "[0-9]+" $filename 
+    grep -o ...                          # -o 只打印匹配到的文本部分
+    grep -v ...                          # -v 打印除匹配到的行之外的所有行
+    grep -c "text" $filename             # 统计并打印文件中匹配到的字符串的行数
+    grep -b -o ...                       # -b -o 打印出字符在所在行中的下标
+    grep -l ...                          # -l 搜索多个文件，找到匹配字符串所在的文件；-L 返回不包含匹配字符串的文件列表
+    grep $match_pattern . -R -n          # 在多级目录中对文件搜索； grep "main()" . -R -n
+    grep -i ...                          # -i 忽略大小写
+    grep -e $match_pattern1 -e $match_pattern2 # 可匹配多个样式
+    grep -f $pattern_filename $filename  # -f 可将样式写入 $pattern_filename 文件中,再匹配
+    grep "main()" . -r --include *.{c,cpp} # --include 只对当前目录下的 .c/.cpp 文件搜索，*.{c,cpp} 会扩展成 *.c / *.cpp , str{1,2,3} ===> str1,str2,str3
+    grep "main()" . -r --exclude "README"  # --exclude 不对 README 文件搜索
+         --exclude-dir: 可以排除目录； --exclude-from $filename: 可以排除 $filename 文件中包含的列表
+    grep -q ...                          # 静默输出，不打印任何结果，只返回命令是否执行成功(0 或 非0)
+    grep ... -A $N                       # 打印匹配行的后 $N 行
+    grep ... -B $N                       # 打印匹配行的前 $N 行
+    grep ... -C $N                       # 打印匹配行的前后 $N 行
+
+sed commands:
+    $: sed 's/pattern/replace_patt/' $filename          # 用 replace_patt 替换 pattern, 但并未修改文件
+    $: sed -i ...                                       # 替换并会修改文件中的内容，只替换第一次匹配到的，余下的不匹配不替换 
+    $: sed 's/pattern/replace_patt/g' $filename         # 用 replace_patt 替换 pattern, 修改文件中所有匹配的项   s/../../g
+    $: sed 's/pattern/replace_patt/Ng' $filename        # 用 replace_patt 替换 pattern, 修改文件中从 N 行匹配后的所有匹配项   s/../../g
+    $: sed '/^$/d' $filename                            # 删除文件中的空白行 d: 删除
+    $:echo this is a digit 7 in a number | sed 's/digit \([0-9]\)/\1/'   # this is a 7 in a number 子串匹配和替换 $1 表示第一个子串，() 包裹的为子串
+
+awk commands:
+    awk 'BEGIN{ commands } { commands } END{ commands }' # 首先执行 BEGIN{}, 然后读取一行执行一次 {}, 读取结束后执行 END{},其中此三部分都是可选部分 
+    awk 'BEGIN{ i=0 } { i++ } END{ print i }'
+    echo | awk '{ var1='v1'; var2='v2'; var3='v3'; print var1,var2,var3 ; }' # v1 v2 v3 ; print 后的参数以逗号分割
+    echo | awk '{ var1='v1'; var2='v2'; var3='v3'; print var1"-"var2"-"var3 ; }' # v1-v2-v3 ; “ 引号作为连接符
+
+    NR:     表示记录数量，对应当前行
+    NF:     表示字段数量，对应当前行中的字段数
+    $0:     表示当前行的文本内容
+    $1:     表示当前行中第一个字段的文本内容
+    $2:     表示当前行中第二个字段的文本内容
+    ...
+
+    print $NF: 打印一行中最后一个字段 $(NF-1) 打印倒数第二个字段
+    awk 'END{ print NR }' $filename # 打印文件的总行数
+    $: VAR=100; echo | awk -v VARIASLE=$VAR '{ print VARIASLE }'   # -v: 可以通过外部值传给 awk
+    $: var1='v1';var2='v2'; echo | awk '{ print v1,v2 }' v1=$var1 v2=$var2
+
+getline 函数: 读取文件中的某一行
+    getline var
+    seq 5 | awk 'BEGIN{ getline; print "test ", $0 } { print $0 }'
+    awk 'NR < 5'        # 行号小于 5 的行
+    awk 'NR==1,NR==4'   # 行号在 1-5 之间的行(不包含第 5 行)
+    awk '/linux/'       # 包含 linux 的行
+    awk '!/linux/'      # ! 不包含 linux 的行
+
+    awk -F: '{ print $NF }' /etc/passwd     # -F 指定一个定界符，默认为空格
+    awk 'BEGIN{ FS=":" } { print $NF }' /etc/passwd # 同上
+
+    awk 内的字符串函数:
+        length(string)                      # 字符串长度
+        index(string, search_str)           # 返回 search_str 在字符串中的位置
+        split(string, array, delimiter)     # 用定界符 delimiter 生成一个字符串列表
+        substr(string, start_pos, end_pos)  # 在字符串中取出 start-end 之间的字符生成子串
+        sub(regex, replace_str, string)     # 将正则表达式匹配的第一个内容替换成 replace_str
+        gsub(regex, replace_str, string)    # 将正则表达式匹配的所有内容替换成 replace_str
+        match(regex, string)                # 检查正则表达式是否匹配字符串，若匹配则返回非0,否则返回0
+
+读取单词中的每一个字符:
+    $: var=hello
+    $: for(( i=0;i<${#var};i++ )); do echo ${word:i:1}; done    # ${string:start_pos:N} 可以取单个字符或多个字符
+读取一行中的每一个单词:
+    $: line=‘this is a test!’;
+    $: for word in $line; do echo $word; done 
+读取文件中的每一行:
+    $: while read line; do echo $line; done < file.txt;   ===   cat file.txt | ( while read line;do echo $line; done )
+
+paste commands: 按列拼接
+   cat exp1.txt
+        1
+        2
+        3
+        4
+        5
+    cat exp2.txt
+        str001
+        str002
+        str003
+        str004
+        str005
+    paste exp1.txt exp2.txt         # -d "," 可以指定分隔符，默认为 \t 
+        1   str001
+        2   str002
+        3   str003
+        4   str004
+        5   str005
+
+rev commands: 反转字符串     abbbb ====> bbbba
+    #!/bin/bash
+    string=malayalam
+    if [[ $string == $( echo $string | rev ) ]];
+    then
+    echo palindrome
+    else
+    echo Not palindrome
+    fi
+
+----------------------------------------2017/08/29---------------------------------------------------    
+wget commands:
+    wget url
+    wget -O $filename url                   # -O 指定下载文件的名字
+    wget -c url                             # -c 可以断点续传
+    wget -b url                             # -b 后台下载
+    wget -i url.txt                         # -i 可以一次下载多个文件
+    wget --reject=gif url                   # --reject 下载网页时不下载指定类型的文件
+    wget -o download.log url                # -o 指定日志文件，并且终端不打印下载信息
+curl commands:
+    curl url                                # 不生成文件，直接输出
+    curl url -o filename --progress         # -o 指定生成的文件名， --progress 显示进度条
+    curl -C -url                            # -C 自动断点续传
+    curl -I url                             # -I 只打印头部
+    curl url > index.html                   # > 重定向输出
+
+tar commands:
+    tar -cf $filename.tar $source           # -c: create file; -f: define file name, put -f the last
+    tar -tf $filename.tar                   # -r: list the file in *.tar
+    tar -rvf $filename.tar new_file         # -r: add new_file to *.tar
+    tar -tvf/-tvvf *.tar                    # -v/-vv: 列出 *.tar 文件中的详情
+    tar -xf *.tar -C $PATH                  # -x: 提取文件; -C: 指定文件存放目录, 默认为当前目录
+    tar -xvf *.tar $file1 $file2            # -xvf: 提取指定文件
+    tar -Af 1.tar 2.tar                     # -Af: 合并两个 tar 文档，合并后的文档就是 1.tar
+    tar -f *.tar --delete filename          # --delete: 从 tar 文件中删除文件
+    tar --delete --file *.tar file11 file2 ... # 同上
+    tar -cf *.tar * --exclude "*.txt"       # --exclude: 排除某种类型文件，并对剩下的文件进行归档; === tar -cf *.tar -X list.txt （list.txt 存储不需要归档的文件列表）
+    tar --exclude-vcs -czvvf *.tar.gz $dir  # --exclude-vcs: 可以排除版本控制的文件，如 .git/.svn
+    tar -cavvf *tar.gz FILES/$dir           # -a: 根据 *.tar.gz 扩展名自动判断压缩格式 （.tar.bz2）
+    tar -czvvf *tar.gz FILES/$dir           # -z: 按 gzip 格式压缩
+    tar -cjvvf *.tar.bz2 FILES/$dir         # -j: 按 bzip2 格式压缩
+    tar -xzvvf *.tar.gz -C $dir             # -xz: 根据 gzip 解压文档
+    tar -xjvvf *.tar.bz2 -C $dir            # -xj: 根据 bzip2 解压文档
+    tar -xzvvf *.* -C $dir                  # -a: 根据扩展名自动选择解压缩格式 
+    $703 ... --totals                       # --totals: 打印归档文件总字节数
+gzip and bzip2 commands:
+    bzip2/gzip filename  ====> filename.gz        # 删除原文件
+    bzip2/gzip -d filename.gz ====> filename      # 删除原文件
+    gzip -l *.gz                            # -l: 列出压缩文件信息
+    bzip2 > gzip # 压缩率
+zip commands:
+    zip *.zip FILES/$dir                    
+    zip -r *.zip file1 file2 ... 
+    zip -d *.tar filename                   # -d: 删除压缩文件中的 filename 文件
+    unzip *.zip                             
+    unzip -l *.zip                          # -l: list the file in *.zip
+gpg -c filename                             # 加密
+gpg *.gpg                                   # 解密
+
+ifconfig commands:
+    ifconfig eth0 192.168.0.122 netmask 255.255.255.0 # 设置 ip 和 子网掩码
+    ifconfig eth0 hw ether 00:0c:29:a2:32:39          # 设置 MAC 地址
+host and nslookup commands:
+    host baidu.com                                    # 解析某个域名的所有 ip 地址
+    nslookup baidu.com                                # ...
+route commands:
+    route/route -n                                    # 显示路由表
+    route ad default gw 192.168.0.1 eth0              # 添加网关
+    traceroute baidu.com                              
+
+other commands:
+    who
+        sdgl     tty7         2017-08-29 08:20 (:0)
+    w
+        16:58:31 up  8:15,  1 user,  load average: 0.24, 0.46, 0.46
+        USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+        sdgl     tty7     :0               08:20    8:38m  9:02   0.76s /sbin/upstart --user
+    uptime
+        17:00:30 up  8:17,  1 user,  load average: 0.58, 0.60, 0.52    # 查看系统上电时间
+
+ps commands:
+    ps -C command           # list the command ID
+    ps -C command -o pid=
+    ps -eo comm,pcpu        # pcpu pid ppid pmem comm cmd user nice time etime tty euid stat 
+
+kill commands:
+    kill -l                 # list all singal
+    kill -s SINGAL pid      # send singal to the pid progress
+
+trap commands:
+    trap 'fuction_name' SINGAL LIST         # 将某个函数分配给一个信号，当信号发生时执行函数 
+        #!/bin/bash
+        #filename: sighandler.sh
+        function handler()
+        {
+        echo Hey, received signal : SIGINT
+        }
+        echo my process ID is $$
+        trap handler SIGINT
+        while true;
+        do
+        sleep 1;
+        done
+

@@ -1,0 +1,85 @@
+输出为有颜色的三角形，且外边框为同一颜色
+
+
+#!/bin/bash
+read -p "输入要打印的列数:" n
+j=1
+s=$n
+dd=0
+echo ""
+echo ""
+echo ""
+for i in `seq $n`
+do
+        for c in `seq $[n-1]`
+            do
+                        echo -n "  "
+            done
+                n=$[n-1]
+        for d in  `seq $j`
+            do
+                if [ $d -eq 1 ];then
+                                echo -ne "\033[42m    \033[0m "
+                elif [ $d -eq $j ];then
+                                echo -ne "\033[42m    \033[0m "
+                elif [ $j -eq $s ];then
+                                echo -ne "\033[42m    \033[0m "
+                elif [ $d -lt $s ];then
+                                ys=`echo $[RANDOM%10+40]m`
+                                echo -ne "\033[$ys    \033[0m "
+#               elif [ $j -eq 3 ];then
+#                               echo -ne "\033[41m   \033[0m "
+#               elif [ $j -eq 5 ];then
+#                               echo -ne "\033[42m   \033[0m "
+#               elif [ $j -eq 7 ];then
+#                               echo -ne "\033[41m   \033[0m "
+#               elif [ $j -eq 9 ];then
+#                               echo -ne "\033[46m   \033[0m "
+#               elif [ $j -eq 11 ];then
+#                               echo -ne "\033[47m   \033[0m "
+#               elif [ $j -eq 13 ];then
+#                               echo -ne "\033[49m   \033[0m "
+#               elif [ $j -eq 15 ];then
+#                               echo -ne "\033[40m   \033[0m "
+#               if [ $d -eq 1 ];then
+#                               echo -n "*   "
+#               elif [ $d -eq $j ];then
+#                               echo -n "*   "
+#               elif [ $j -eq 3 ];then
+#                               echo -n "！  "
+#               elif [ $j -eq 4 ];then
+#                               echo -n "#   "
+#               elif [ $j -eq 5 ];then
+#                               echo -n "&   "
+#               elif [ $j -eq 6 ];then
+#                               echo -n "『  "
+#               elif [ $j -eq 7 ];then
+#                               echo -n "$   "
+#               elif [ $j -eq 8 ];then
+#                               echo -n "』  "
+#               elif [ $j -eq 9 ];then
+#                               echo -n "@   "
+#               elif [ $j -eq 10 ];then
+#                               echo -n "……  "
+#               elif [ $j -eq 11 ];then
+#                               echo -n "~   "
+#               elif [ $j -eq 12 ];then
+#                               echo -n "%   "
+#               elif [ $j -eq 13 ];then
+#                               echo -n "￥  "
+                elif [ $j -eq $s ];then
+#                               echo -n "*   "
+                                echo -ne "\033[42m   \033[0m "
+                else
+                                echo -n "    "
+#                               echo -n "\033[46m   \033[0m "
+                fi
+            done
+                        dd=$[dd+1]
+                        j=$[j+1]
+        echo
+done
+echo ""
+echo
+echo
+

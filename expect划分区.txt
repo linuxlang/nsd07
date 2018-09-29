@@ -1,0 +1,53 @@
+使用expect划分区,使用MBR/msdos分区模式
+#!/bin/bash
+zfgs=3
+ljgs=2
+x=$[$zfgs+$ljgs+1]   //这里的值调整创建的分区的个数
+for i in /dev/vdb /dev/vdc
+do
+	for c in `seq $x`
+	do
+if [ $c -eq 4 ];then         //等于4时为拓展分区,起始和结尾都是默认值   
+expect<<EOF                   //实现非交互
+spawn fdisk $i
+expect ： {send "n\r"}       //注意冒号,中英文不同 
+expect : {send "\r"}
+expect ： {send "\r"}
+expect ： {send "\r"}
+expect ： {send "\r"}
+expect ： {send "w\r"}
+expect ： {send "exit\r"}
+EOF
+partprobe                     //刷新
+elif [ $c -gt 4 ];then        //大于四时为逻辑分区,
+expect<<EOF
+spawn fdisk $i
+expect ： {send "n\r"}
+expect ： {send "\r"}
+expect ： {send "+1G\r"}
+expect ： {send "w\r"}
+expect ： {send "exit\r"}
+EOF
+partprobe
+else                         //这里是创建主分区
+expect<<EOF                  
+spawn fdisk $i
+expect ： {send "n\r"}
+expect : {send "\r"}
+expect ： {send "\r"}
+expect ： {send "\r"}
+expect ： {send "+1G\r"}
+expect ： {send "w\r"}
+expect ： {send "exit\r"}
+EOF
+partprobe
+fi
+if [ $c -ne 4 ];then            //分区四无需格式化,为拓展分区
+mkfs.ext4 $i$c                  //格式化文件系统
+mkdir /media/${i##*/}$c         //创建挂载点
+mount $i$c  /media/${i##*/}$c   //挂载
+partprobe                       //刷新
+fi
+done
+done
+

@@ -1,0 +1,15 @@
+#!/bin/bash
+clear
+read -p "输入一个[0-2](0,石头；1，剪刀；2，布)的数字：" num
+jsj=$[RANDOM%3]
+echo "计算机出的是$jsj"
+[ $num -eq 0 ] && [ $jsj -eq 1 ] && echo "you win"
+[ $num -eq 1 ] && [ $jsj -eq 2 ] && echo "you win"
+[ $num -eq 2 ] && [ $jsj -eq 0 ] && echo "you win"
+[ $num -eq 0 ] && [ $jsj -eq 2 ] && echo "you loss"
+[ $num -eq 1 ] && [ $jsj -eq 0 ] && echo "you loss"
+[ $num -eq 2 ] && [ $jsj -eq 1 ] && echo "you loss"
+[ $num -eq $jsj ] && echo "打平"
+[ $num -ne 1 ] && [ $num -ne 2 ] && [ $num -ne 0 ]&& echo "####错误###请输入[0-2]的数字####"
+
+

@@ -1,0 +1,19 @@
+#!/bin/bash
+for i in /dev/vdb /dev/vdc
+do
+umount /media/vd??       //卸载访问点
+rm -rf /media/vd??       //删除访问点
+for c in `seq 7`         //循环次数  分区个数
+do
+expect<<EOF
+spawn fdisk $i
+expect ： {send "d\r"}
+expect ： {send "\r"}
+expect ： {send "w\r"}
+expect ： {send "exit\r"}
+EOF
+done
+done
+
+
+

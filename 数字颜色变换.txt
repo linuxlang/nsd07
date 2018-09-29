@@ -1,0 +1,27 @@
+#!/bin/bash
+x=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+clear
+while :
+do
+        ccf=$[RANDOM%62]
+        for i in `seq $ccf`
+        do
+#               echo $x | cut -b $sjs
+#               sjs=$[RANDOM%62+1]
+#               pass=`expr substr "$x" $sjs`
+#               sjs=$[RANDOM%62+1]
+#               echo -n "$pass"
+                xg=${x:$sjs:1}
+                sjs=$[RANDOM%62]
+                ys=`echo $[RANDOM%19+31]m`
+                nmd="\033[$ys $xg \033[0m"
+                echo -ne "$nmd"
+        done
+#       echo
+done
+#if [ $[$RANDOM%10000] -eq $[$RANDOM%10000] ];then
+#       exit
+#       sleep 3
+#fi
+
+

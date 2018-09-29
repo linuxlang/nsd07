@@ -1,0 +1,52 @@
+新建分区
+
+#!/bin/bash
+echo "n
+p
+1
+
++1G
+n
+p
+2
+
++1G
+w
+q " >creat.txt
+for i in {/dev/vdb,/dev/vdc}
+do
+        fdisk $i<./creat.txt  &>/dev/null
+        partprobe $i   &>/dev/null
+    if [ $i == /dev/vdb ];then
+        mkfs.ext4 /dev/vdb1  &>/dev/null
+        mkfs.ext4 /dev/vdb2  &>/dev/null
+    else
+        mkfs.ext4 /dev/vdc1  &>/dev/null
+        mkfs.ext4 /dev/vdc2  &>/dev/null
+    fi
+done
+        mkdir /{1..4}
+        mount /dev/vdb1 /1
+        mount /dev/vdb2 /2
+        mount /dev/vdc1 /3
+        mount /dev/vdc2 /4
+    rm -rf creat.txt
+        lsblk {/dev/vdb,/dev/vdc}
+
+
+删除
+#!/bin/bash
+echo "d
+
+d
+w
+q" > rm.txt
+umount /{1..4}
+rm -rf /{1..4}
+for i in {/dev/vdb,/dev/vdc}
+do
+        fdisk $i<./rm.txt &>/dev/null
+done
+        rm -rf rm.txt
+        lsblk /dev/vd{b..c}
+
